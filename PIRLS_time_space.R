@@ -28,13 +28,7 @@ pirls <- function(
     wlimit <- 20
     w[w >= wlimit] <- wlimit
 
-    # w <- psi.huber(residuo, k = 0.1)
-    # ww <- 2 * (1 - tau) * w
-    # ww[residuo > 0] <- 2 * tau * w[residuo > 0]
-    # w <- ww
-
     #Calculate the new estimates
-
     alpha.new <- solve(
       wcrossprod(basis_combined, basis_combined, w) + penalty + ridge.penalty
     ) %*%
@@ -75,7 +69,7 @@ pirls <- function(
           t(basis_combined * w)
       )
   )
-  # aaa <- basis_combined%*%ginv(wcrossprod(basis_combined, basis_combined, w) + penalty + ridge.penalty)%*%t(basis_combined)%*%diag(w)
+
   #Calculate fit criteria: SIC, GCV
   obj <- sum(quantile_loss(epsilon = residuo, tau = tau))
   dof <- sum(Hat.diag) # sum(diag(Hat))
