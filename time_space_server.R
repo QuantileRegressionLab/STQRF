@@ -7,7 +7,6 @@ graphics.off()
 lib = getwd()
 repos = "http://cran.uk.r-project.org"
 .libPaths(c(.libPaths(), lib))
-# install.packages(c("mboost"), lib = lib, repos = repos)
 
 Sys.setenv(OPENBLAS_NUM_THREADS = 1)
 Sys.setenv(MKL_NUM_THREADS = 1)
@@ -20,26 +19,24 @@ library(qgam)
 library(mboost)
 library(lqmm)
 library(MASS)
-# library(car)
 library(abind)
 library(parallel)
 library(doParallel)
 
-source("../functions/mixed_model_function_time_space.R")
-source("../functions/PIRLS_time_space.R")
+source("mixed_model_function_time_space.R")
+source("PIRLS_time_space.R")
 
 # Create cluster
-# ncores <- as.numeric(Sys.getenv("SLURM_CPUS_ON_NODE")) # detectCores()
-ncores <- parallel::detectCores() #aggiunto
+# ncores <- as.numeric(Sys.getenv("SLURM_CPUS_ON_NODE"))
+ncores <- parallel::detectCores()
 ncores
 cl <- makeCluster(ncores)
 registerDoParallel(cl)
 invisible(clusterEvalQ(
   cl = cl,
   c(
-    .libPaths(getwd()),
-    source("../functions/mixed_model_function_time_space.R"), #aggiunto
-    source("../functions/PIRLS_time_space.R"), #aggiunto
+    source("mixed_model_function_time_space.R"),
+    source("PIRLS_time_space.R"),
     library(splines),
     library(quantreg),
     library(qgam),
@@ -55,20 +52,16 @@ invisible(clusterEvalQ(
 nspace = 50 # number of locations
 ntime = 10 # number of years or days -> 365*nyr
 n = nspace * ntime
-# tau_vec <- c(0.1, 0.5, 0.9)
-# tau_vec <- c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95) #nella prova con 250 simulazioni
-tau_vec <- c(0.05, 0.5, 0.95) #aggiunta per tau estremi
+tau_vec <- c(0.05, 0.5, 0.95)
 scenario = "non_linear" # "linear" or "non_linear"
 
 df <- c(5, 5) # B-spline degrees of freedom space and time
 ntree = 300 # number of trees
 max_iter = 300 # maximum number of iteration
 tol = 10e-04 # tolerance of the algorithm
-# B = 100 # 16 * 4 # number of Monte Carlo replicates
-B = 250 # 16 * 4 # number of Monte Carlo replicates
+B = 250 # number of Monte Carlo replicates
 #Lambda
-lambda_values <- 1 / (n^seq(0.01, 0.5, length.out = 10)) # 1 / (n^seq(0.1, 1, length.out = 10)) # 1 / (n^seq(0.8, 10, length.out = 10))
-# lambda_values <- seq(1e-9, 1e-5, length.out = 5)
+lambda_values <- 1 / (n^seq(0.01, 0.5, length.out = 10))
 lambda_grid <- matrix(lambda_values, nrow = length(lambda_values), ncol = 5)
 colnames(lambda_grid) = paste("lambda", 1:5, sep = "")
 lambda.ridge = 0.0001
