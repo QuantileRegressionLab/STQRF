@@ -316,9 +316,9 @@ apply(res.tau, 1:2, median)
 apply(info_sqrf, 1:2, mean)
 apply(info_sqrf, 1:2, median)
 
-# boxplot(t(res.tau[, 1, ]), main = "Qloss per tau = 0.1")
-# boxplot(t(res.tau[, 2, ]), main = "Qloss per tau = 0.5")
-# boxplot(t(res.tau[, 3, ]), main = "Qloss per tau = 0.9")
+boxplot(t(res.tau[, 1, ]), pch = 19, main = "Qloss per tau = 0.05")
+boxplot(t(res.tau[, 2, ]), pch = 19, main = "Qloss per tau = 0.50")
+boxplot(t(res.tau[, 3, ]), pch = 19, main = "Qloss per tau = 0.95")
 
 #################################
 #################################
