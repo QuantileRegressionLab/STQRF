@@ -113,7 +113,6 @@ res.out = foreach(b = 1:B) %dopar%
 
     if (scenario == "linear") {
       y <- 3 + 2 * dat$x1 + 0.5 * dat$x2 + Alltrend + rnorm(n, mean = 0, sd = 1) # rchisq(n, df = 3)/sqrt(6)
-      # y <- 3 + 2 * dat$x1 + 2 * dat$x2 + Alltrend + rnorm(n, mean = 0, sd = 1)
     } else if (scenario == "non_linear") {
       y <- 3 +
         2 * dat$x1 +
@@ -135,10 +134,6 @@ res.out = foreach(b = 1:B) %dopar%
       time = dat$time,
       location = rep(1:nspace, ntime)
     )
-
-    # train_idx <- sample(1:n, floor(n * 0.7), replace = F)
-    # train <- data.s[train_idx, ]
-    # test <- data.s[-train_idx, ]
 
     train_idx <- sample(1:nspace, floor(nspace * 0.7), replace = F)
     train <- data.s[data.s$location %in% train_idx, ]
@@ -212,7 +207,6 @@ res.out = foreach(b = 1:B) %dopar%
         newdata = test[c("x1", "x2", "longitude", "latitude", "time")]
       )
     }
-    # pred_qboost <- matrix(NA, nrow(test), length(tau_vec))
 
     # Quantile Random Forest
     qrf_model <- quantregForest(
@@ -335,180 +329,4 @@ fname <- sprintf(paste0("res_norm_", scenario, "%s_B", B, ".RData"), ts_tag)
 save.image(fname)
 
 
-stopCluster(cl) #aggiunto
-
-### Post-processing and plots for non-linear scenario
-load("res_norm_nonlin_20260112_B250.RData")
-# library(gridExtra)
-# library(grid)
-# ts_tag <- format(Sys.time(), "%Y%m%d")
-# name <- sprintf("Boxplot_Sim_B250.pdf", ts_tag)
-# CairoPDF(name, width = 12, height = 10)
-# for (t in 1:length(tau_vec)) {
-#   boxplot(t(res.tau[, t, ]), main = paste("Qloss per tau =", tau_vec[t]))
-# }
-res.tau.nonlin <- res.tau
-# # Nuova pagina per la tabella
-# grid.newpage()
-tab_nonlinear <- round(apply(res.tau, 1:2, mean), 4)
-tab_nonlinear <- tab_nonlinear[, c(1, 4, 7)]
-tab_nonlinear_sd <- round(apply(res.tau, 1:2, sd), 4)
-tab_nonlinear_sd <- tab_nonlinear_sd[, c(1, 4, 7)]
-
-
-# #Tabella per frequenze di lambda
-# lambda_chosen <- info_sqrf["lambda.idx", , ]
-# # Poiché lambda è lo stesso per tutti i tau (scelto a tau=0.5),
-# # basta prendere una riga qualsiasi, es. tau=0.5
-# lambda_vec <- lambda_chosen["0.5", ] # vettore di 250 valori
-
-# freq_table <- table(lambda_vec)
-# freq_rel <- round(prop.table(freq_table), 5)
-# freq_perc <- round(prop.table(freq_table) * 100, 2) # in percentuale
-
-# # tab iterazioni
-# iter_mat <- info_sqrf["iter", , ] # matrice 7 x 250
-
-# iter_summary <- t(apply(iter_mat, 1, function(x) {
-#   c(
-#     Mean = round(mean(x), 1),
-#     # Median = round(median(x), 1),
-#     Min = min(x),
-#     Max = max(x)
-#   )
-# }))
-
-# library(xtable)
-# xtable(iter_summary[c(1, 4, 7), ])
-
-### Post-processing and plots for linear scenario
-load("res_norm_linear20260314_B250.RData")
-library(gridExtra)
-library(grid)
-# ts_tag <- format(Sys.time(), "%Y%m%d")
-# name <- sprintf(paste0("Boxplot_Sim_B250_", scenario, ".pdf"), ts_tag)
-# # CairoPDF(name, width = 12, height = 10)
-# for (t in 1:length(tau_vec)) {
-#   boxplot(t(res.tau[, t, ]), main = paste("Qloss per tau =", tau_vec[t]))
-# }
-res.tau.lin <- res.tau
-# # Nuova pagina per la tabella
-# grid.newpage()
-tab_linear <- round(apply(res.tau.lin, 1:2, mean), 4)
-tab_linear_sd <- round(apply(res.tau.lin, 1:2, sd), 4)
-# tab_linear <- tab_linear[, c(2, 3, 4)]
-grid.table(tab)
-# dev.off()
-# xtable(cbind(tab_linear, tab_nonlinear), digits = 4)
-# #Tabella per frequenze di lambda
-lambda_chosen <- info_sqrf["lambda.idx", , ]
-# # Poiché lambda è lo stesso per tutti i tau (scelto a tau=0.5),
-# # basta prendere una riga qualsiasi, es. tau=0.5
-lambda_vec <- lambda_chosen["0.5", ] # vettore di 250 valori
-
-freq_table <- table(lambda_vec)
-freq_rel <- round(prop.table(freq_table), 5)
-# freq_perc <- round(prop.table(freq_table) * 100, 2) # in percentuale
-
-# # tab iterazioni
-iter_mat <- info_sqrf["iter", , ] # matrice 7 x 250
-
-iter_summary <- t(apply(iter_mat, 1, function(x) {
-  c(
-    Mean = round(mean(x), 1),
-    # Median = round(median(x), 1),
-    Min = min(x),
-    Max = max(x)
-  )
-}))
-
-# library(xtable)
-xtable(iter_summary[])
-
-#### Boxplot with ggplot ##
-library(ggplot2)
-# per tau=0.05
-df_0.05 <- df_0.5 <- df_0.95 <- matrix(
-  data = NA,
-  nrow = 2 * B,
-  ncol = 6,
-  dimnames = list(NULL, c(names(res.tau.lin[, 1, 1])))
-)
-for (b in 1:B) {
-  df_0.05[b, ] <- res.tau.lin[, 1, b] #tau=0.05
-  df_0.05[b + 250, ] <- res.tau.nonlin[, 1, b] #tau=0.05
-
-  df_0.5[b, ] <- res.tau.lin[, 2, b] #tau=0.5
-  df_0.5[b + 250, ] <- res.tau.nonlin[, 4, b] #tau=0.5
-
-  df_0.95[b, ] <- res.tau.lin[, 3, b]
-  df_0.95[b + 250, ] <- res.tau.nonlin[, 7, b] #tau=0.95
-}
-df_0.05 <- as.data.frame(df_0.05)
-df_0.5 <- as.data.frame(df_0.5)
-df_0.95 <- as.data.frame(df_0.95)
-v1 <- rep("linear", 250)
-v2 <- rep("non-linear", 250)
-df_0.05$Scenario <- df_0.5$Scenario <- df_0.95$Scenario <- c(v1, v2)
-
-
-df_0.05_long <- df_0.05 %>%
-  pivot_longer(
-    cols = c("QR", "STQR", "QGAM", "QBOOST", "QRF", "STQRF"),
-    names_to = "Model",
-    values_to = "Value"
-  )
-
-df_0.5_long <- df_0.5 %>%
-  pivot_longer(
-    cols = c("QR", "STQR", "QGAM", "QBOOST", "QRF", "STQRF"),
-    names_to = "Model",
-    values_to = "Value"
-  )
-
-df_0.95_long <- df_0.95 %>%
-  pivot_longer(
-    cols = c("QR", "STQR", "QGAM", "QBOOST", "QRF", "STQRF"),
-    names_to = "Model",
-    values_to = "Value"
-  )
-
-
-#Boxplot:
-bp_theme <- theme_minimal() +
-  theme(
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14),
-    axis.text.x = element_text(size = 12, angle = 15, hjust = 1),
-    axis.text.y = element_text(size = 12),
-    legend.key.height = unit(0.5, 'cm'),
-    legend.key.width = unit(1.0, 'cm'),
-    legend.text = element_text(size = 13),
-    legend.title = element_text(size = 14),
-    plot.margin = margin(5, 10, 5, 5)
-  )
-
-gg_0.05 <- ggplot(df_0.05_long, aes(x = Model, y = Value, fill = Scenario)) +
-  geom_boxplot(linewidth = 0.6, width = 0.6, outlier.size = 0.8) +
-  bp_theme +
-  labs(x = "Model at τ = 0.05")
-
-gg_0.5 <- ggplot(df_0.5_long, aes(x = Model, y = Value, fill = Scenario)) +
-  geom_boxplot(linewidth = 0.6, width = 0.6, outlier.size = 0.8) +
-  bp_theme +
-  labs(x = "Model at τ = 0.50")
-
-gg_0.95 <- ggplot(df_0.95_long, aes(x = Model, y = Value, fill = Scenario)) +
-  geom_boxplot(linewidth = 0.6, width = 0.6, outlier.size = 0.8) +
-  bp_theme +
-  labs(x = "Model at τ = 0.95")
-
-
-library(ggpubr)
-ts_tag <- format(Sys.time(), "%Y%m%d")
-name <- sprintf("Boxplot_Sim_B250_%s.pdf", ts_tag)
-# Dimensioni consigliate per A4 con margini standard:
-# Cairo::CairoPDF(name, width = 13, height = 4.5)
-Cairo::CairoPDF(name, width = 13, height = 5)
-ggarrange(gg_0.05, gg_0.5, gg_0.95, nrow = 1, common.legend = TRUE)
-dev.off()
+stopCluster(cl)
