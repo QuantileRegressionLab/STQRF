@@ -152,7 +152,7 @@ QuantileRandomForest_BSplines <- function(
         "date",
         "polygon_id"
       )
-  )] #ho aggiunto date e polygon_id !!!!
+  )]
   x = as.data.frame(x)
   longitude = data$longitude
   latitude = data$latitude
@@ -234,10 +234,6 @@ QuantileRandomForest_BSplines <- function(
   n = length(y)
 
   # Set initial estimates
-  # quant_model <- lm.fit(x=cbind(1,x), y=y)
-  # predicted_qrf <- quant_model$fitted.values
-
-  #### andare in parallelo in caso sulla rf
   qrf_model <- quantregForest(
     x = x,
     y = y,
@@ -246,10 +242,8 @@ QuantileRandomForest_BSplines <- function(
     nthreads = nthreads
   )
   predicted_qrf <- predict(qrf_model, what = tau)
-  # predicted_qrf <- rep(0, n)
   alpha = rep(0, ncol(basis_combined))
   y_star = y - (predicted_qrf + basis_combined %*% alpha)
-  # %%
 
   sigma = mean(quantile_loss(y_star, tau = tau), na.rm = T)
 
@@ -262,17 +256,12 @@ QuantileRandomForest_BSplines <- function(
     y_star <- y - predicted_qrf
 
     # space
-    # space_model<-rq(y_star ~ basis_spatial - 1, tau = tau, method = "fn")
-    # alpha.new=space_model$coefficients
-    # space_time_model<-pirls(y_star = y_star, basis_combined = basis_combined, tau = tau, penalty = penalty, ridge.penalty=ridge.penalty,
-    #                         verbose = FALSE)
     space_time_model <- pirls(
       y_star = y_star,
       basis_combined = basis_combined,
       tau = tau,
       penalty = penalty,
       ridge.penalty = ridge.penalty,
-      # tol = 10e-03
       tol = 10e-05
     )
     alpha.new = space_time_model$alpha
@@ -287,7 +276,6 @@ QuantileRandomForest_BSplines <- function(
       keep.inbag = T,
       nthreads = nthreads
     )
-    # qrf_model <- quantregForest(x=x, y=y_star, ntree = ntree, keep.inbag = T, nthreads = parallel::detectCores() - 1)
     predicted_qrf <- predict(qrf_model, what = tau) #T for out of bag predictions, gives you information about which information is in and out of bag
 
     # scale
@@ -392,7 +380,6 @@ surfaceplotSpace <- function(
     add = T,
     zlim = d2lim,
     lty = 4,
-    # nlevels = 20
     nlevels = 50
   )
 }
