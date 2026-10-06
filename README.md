@@ -1,6 +1,6 @@
 # README file
 
-The scripts in this repository can be used to reproduce the simulation results in *Spatio-temporal quantile regression forests for vegetation productivity in Northern Italy* by L. Merlo, L. Salvati, V. Sciabolazza, B. Foroni and L. Petrella.
+The scripts in this repository can be used to reproduce the simulation results in *Spatio-temporal quantile regression forests for vegetation productivity in Northern Italy* by L. Merlo, L. Petrella, B. Foroni, V. L. Sciabolazza, and L. Salvati.
 
 ## Prerequisites
 ### Software requirements
